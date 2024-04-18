@@ -1,0 +1,89 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+source("scripts/utils.R")
+obj = readRDS(file = "output/processed_data/habib_2020/obj.habib_2020.Rds")
+genes=Features(obj)[0:10000]
+simulate_cell_data=function(k,nfactors,nfeatures){
+  data = sample(0:15,nfeatures,replace=TRUE)
+  f=sample(0:k, 1)
+  factor_data = sample(50:1000,nfactors, replace=TRUE)
+  data[(f*nfactors):((f+1)*nfactors-1)]=factor_data
+  return(data)
+}
+mat=lapply(1:5000, function(x) simulate_cell_data(25,50,10000))
+mat=do.call(cbind,mat)
+rownames(mat)=genes
+
+cluster_data = function(obj.cluster, resolution,return.model=FALSE,run_umap=FALSE){
+  if(!("data" %in% names(obj.cluster@assays[["RNA"]]@layers))){
+    obj.cluster <- NormalizeData(obj.cluster)
+  }
+  for (l in Layers(obj.cluster, search='data')){
+    obj.cluster[["RNA"]][l] <- as(obj.cluster[["RNA"]][l], Class = "dgCMatrix")
+  }
+  obj.cluster <- FindVariableFeatures(obj.cluster)
+  obj.cluster <- ScaleData(obj.cluster,features=Features(obj.cluster))
+  obj.cluster <- RunPCA(obj.cluster, seed.use = 42)
+  obj.cluster <- FindNeighbors(obj.cluster, dims = 1:30, reduction="pca")
+  obj.cluster <- FindClusters(obj.cluster, resolution = resolution, cluster.name = "unintegrated_clusters", random.seed=42)
+  if (run_umap){
+    obj.cluster <- RunUMAP(obj.cluster, dims = 1:30, reduction = "pca", return.model=return.model, reduction.name = "umap.unintegrated",seed.use = 42)
+  }
+  return(obj.cluster)
+}
+
+
+#### Run Simulated Data through NMF pipeline
+obj.sim=CreateSeuratObject(counts=mat)
+sim=obj.sim
+#sim=cluster_data(sim,1)
+sim=NormalizeData(sim)
+sim=FindVariableFeatures(sim,nfeatures = 10000)
+sim=ScaleData(sim)
+sim=RunPCA(sim)
+sim=FindNeighbors(sim, dims = 1:30, reduction="pca")
+sim=FindClusters(sim, resolution = 2, cluster.name = "unintegrated_clusters", random.seed=42)
+sim=RunUMAP(sim, dims = 1:30, reduction = "pca", reduction.name = "umap.unintegrated",seed.use = 42)
+
+#replace above with:
+obj.sim=cluster_data(obj.sim, 2,return.model=F,run_umap=T)
+p=DimPlot(obj.sim)
+ggsave(filename="output/figures/sim/sim_umap.jpg",plot=p,device="jpeg",dpi="retina")
+#obj.sim=SCTransform(obj.sim, method ="glmGamPoi", do.scale=T, do.center=T, vst.flavor = "v2", verbose = FALSE,variable.features.n=length(Features(sim))) 
+obj.sim = obj.sim %>% 
+  clear_normalizations()%>%
+  calculate_normalizations(path="output/processed_data/sim/sim/")
+normalizations = c("rna_counts","rna_data","rna_norm","rna_scale","rna_zscored","rna_zscored_nonneg","sct_counts","sct_data","sct_scale","sct_scale_nonneg") 
+nmf_all_normalizations(obj.sim,
+                       file_prefix="sim_",
+                       dataset="sim",
+                      normalizations)
+#plot_all_expression_and_comparision_plots(sim,normalizations,prefix="sim_",dataset="sim_")
+
+
+saveRDS(
+  object = obj.sim,
+  file = "output/processed_data/sim/obj.sim.Rds"
+)
+#sim=readRDS(file = paste0(base_path,"lee_et_al_2021/data/obj.lee.sim.Rds"))
+
+##### Compare results to the ground truth that was simulated 
+ground_truth=data.frame(row.names=c(1:50))
+for(i in 0:24){
+  g = genes[(i*50+1):(i*50+50)]
+  ground_truth=cbind(ground_truth,g)
+}
+write.csv(ground_truth,file="output/processed_data/sim/ground_truth.csv",col.names=F)
+
+compare_list=lapply(normalizations, function(x)
+    read_gp_csv(paste0("output/processed_data/sim/sim_",x,".csv")))
+compare_list=append(compare_list,list(read_gp_csv("output/processed_data/sim/ground_truth.csv")))
+compare_gene_programs_pairwise(compare_list,"output/figures/sim/sim_vs_ground_truth")
+```
+
+
+

@@ -1,0 +1,130 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+```{r}
+source("scripts/run_nmf.R")
+source("scripts/utils.R")
+dataset="cain"
+data_path=paste0("output/processed_data/cain/")
+obj.overall=readRDS(file = paste0(data_path,"obj.cain.Rds"))
+obj.lee=readRDS(file = paste0("output/processed_data/lee_2021/obj.lee_2021.Rds"))
+obj.habib=readRDS(file = paste0("output/processed_data/habib_2020/obj.habib_2020.Rds"))
+compare_nmf(obj.overall,"habib_2020","Immune","global",normalizations)
+compare_random_samples(obj.cell_type.ctrl,dataset,paste0(data_path,file_prefix,"_ctrl_"),normalizations)
+```
+
+```{r}
+compare_nmf(obj.habib, "Immune")
+#d="habib_2020" 
+d="lee_2021"
+#ct="Astrocyte"
+ct="Immune"
+n="cell_type"
+#n="condition"
+normalizations = c("rna_scale","rna_zscored","rna_zscored_nonneg","sct_scale","sct_scale_nonneg","rna_norm","softmax")
+obj.overall = obj.habib
+obj.overall = obj.lee
+run_nmf=function(){
+  for (d in datasets){
+    data_path=paste0("output/processed_data/",d,"/")
+    obj.overall=readRDS(file = paste0(data_path,"obj.",d,".Rds"))
+    for (ct in cell_types){
+      for (n in norms){
+        compare_nmf(obj.overall,d,ct,n,normalizations)    
+        #Compare ctrl vs ad
+        #b1=read_gp_csv(paste0(data_path,d,"_norm_",n,"_",ct,"_ctrl_",normalizations,".csv"))
+        #b2=read_gp_csv(paste0(data_path,d,"_norm_",n,"_",ct,"_ad_",nomalizations,".csv"))
+        #compare_gene_programs(b1,b2,
+                              #filename=paste0("output/figures/",d,"/nmf/",d,"_norm_",n,"_",ct,"_ctrl_vs_ad.jpg"),
+                              #sort=TRUE)
+      }
+    }
+  }
+}
+file_prefix= paste0(d,"_norm_cell_type_",ct) 
+csv_file_prefix=paste0(data_path,file_prefix,"_ad_")
+figure_prefix = sub("processed_data","figures",csv_file_prefix)
+figure_prefix = sub(paste0("/",d,"/"),paste0("/",d,"/nmf/"),figure_prefix)	
+t2=plot_all_expression_and_comparision_plots(test, normalizations, prefix=paste0(data_path, 
+    file_prefix, "_ad_"), figure_prefix, d)
+
+```
+
+```{r}
+plot_gene_exp=function(obj,genes,output_file){
+  obj$condition <- factor(x = obj$condition, levels = c('Control', 'AD'))
+  obj <-SetIdent(obj,value=obj$cell_type)
+  p=VlnPlot(obj, 
+            features = genes,
+            #group.by="cell_type",
+            split.by = "condition",
+            layer="data",
+            adjust=0.75,
+            alpha=0.05,
+            #log=TRUE,
+            #stack = TRUE,
+            #flip = TRUE,
+            idents=c("Astrocyte","Immune"))#/,
+           # combine = TRUE)
+  ggsave(plot=p,filename=output_file,device="jpeg",dpi="retina",width=12,height=9)
+  #mapply(ggsave, file=output_file, device="jpeg",dpi="retina", plot=p)
+}
+samples=c("habib_2020","lee_2021")
+cell_types=c("Immune","Astrocyte")
+genes=c("Vim")
+
+genes=c("Vim", "Ctsb", "Ifit3", "Serpina3n",  "Gsn", "Cd300lf","Kif17")
+plot_all_gene_exp=function(){
+  for (s in samples){
+    data_path=paste0("output/processed_data/",s,"/")
+    obj.overall=readRDS(file = paste0(data_path,"obj.",s,".Rds"))
+    DefaultAssay(obj.overall)="RNA"
+    output_file=paste0("output/figures/",s,"/",s,"_grf_genes.jpg")
+    plot_gene_exp(obj.overall,genes,output_file)
+  }
+}
+plot_all_gene_exp()
+obj.cell_type=subset(obj.overall,subset=predicted.celltype.l1=="Astrocyte")
+
+"Cd3001f"
+obj.overall=obj.lee
+obj.overall$condition <- factor(x = obj.overall$condition, levels = c('Control', 'AD'))
+obj.overall <-SetIdent(obj.overall,value=obj.overall$predicted.celltype.l1)
+DefaultAssay(obj.lee)="RNA"
+p=VlnPlot(obj.lee, 
+            features = genes,
+            #group.by="cell_type",
+            split.by = "condition",
+            layer="data",
+            adjust=0.75,
+            alpha=0.05,
+            #log=TRUE,
+            #stack = TRUE,
+            #flip = TRUE,
+            idents=c("Astrocyte","Immune"))+
+            labs(x="")#/,
+           # combine = TRUE)
+p=lapply(p,function(x) x+labs(x=""))
+ggsave(plot=p,filename="output/test.jpg",device="jpeg",dpi="retina",width=12,height=9)
+#p=p+ theme(axis.text.x = element_text(size = 12,
+#                                      angle=0,
+#                                      hjust=0.5,
+#                                       face="plain"),
+#           strip.text.y.right=element_text(size=12,face="plain"))
+#ggsave(plot=p,filename="output/test.jpg",device="jpeg",dpi="retina",width=8,height=6)
+
+```
+
+```{r}
+plan("future::multisession", workers=6)
+future_map(normalizations, run_nmf_parallel, obj.nmf = obj.cain, 
+    csv_file_prefix = "output/test/", figure_prefix = "output/test", 
+    dataset = "cain", .progress = TRUE)
+```
+```{r}
+obj.lee.immune_ad=readRDS(file = paste0("output/processed_data/lee_2021/lee_2021_norm_cell_type_Immune_ad_nmf.Rds"))
+```
+
