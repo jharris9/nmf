@@ -45,7 +45,7 @@ suppressPackageStartupMessages({
   library(ggplot2)
   library(SeuratObject)
   library(Seurat)
-  library(SeuratDisk)
+  #library(SeuratDisk)
   #library(Azimuth)
   library(dtplyr)
   library(dittoSeq)
@@ -98,9 +98,9 @@ markers.brain=list("astrocyte"=markers.brain.astrocyte,"oligos"=markers.brain.ol
 markers.brain.core=c('Lrig1',"Mbp","Fox3","Ccl3l3",'Sele')
 
 #base_path = "/Users/james/Nextcloud/Lab/Margeta_lab/analyses/"
-source("scripts/utils/utils_data_loading.R")
-source("scripts/utils/utils_gene_name_conversion.R")
-source("scripts/utils/utils_qc.R")
+#source("scripts/utils/utils_data_loading.R")
+#source("scripts/utils/utils_gene_name_conversion.R")
+#source("scripts/utils/utils_qc.R")
 
 ######### SEURAT PIPELINE ##########
 
