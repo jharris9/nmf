@@ -1,4 +1,5 @@
-
+source("scripts/utils/utils_gene_name_conversion.R")
+source("scripts/utils/utils_qc.R")
 ############### DATA LOADING ###############
 
 #Quickly load a datatable from file
@@ -7,7 +8,7 @@ load_dt  = function(path){
   #dt = dt[,lapply(.SD, sum), by="Gene name"]
   rows = dt[[1]]
   rownames(dt)=rows
-  dt[,1:=NULL]
+  #dt[,1:=NULL]
   return(dt)
 }
 
@@ -15,7 +16,7 @@ load_dt  = function(path){
 load_mat = function(dt,path,convert){
   if (convert=="ensemble"){
     #mat <- Azimuth:::ConvertEnsembleToSymbol(mat = mat, species = "mouse")
-    ensb=read.csv("raw_data/ensembl_gene_name.txt",sep="\t")
+    ensb=read.csv("/raw_data/ensembl_gene_name.txt",sep="\t")
     dt = convert_ensemble_to_gene_name(dt,ensb)
   }else if(convert=="human"){
     #rownames(dt) = unlist(lapply(rownames(dt), function(x) convert_human_to_mouse(x)))
@@ -35,14 +36,15 @@ load_mat = function(dt,path,convert){
   mat <- open_matrix_dir(dir=path)
   return(mat)
 }
-load_data = function(dir,files,samples,convert){
+load_data = function(path.input,path.output,files,samples,convert){
   data.list <- c()
   metadata <- c()
   for (i in 1:length(files)) {
-    path <- paste0(dir,files[i],".txt.gz")
+    path <- paste0(path.input,files[i],".txt.gz")
     dt = load_dt(path)
-    mat = load_mat(dt,paste0(gsub(".txt.gz", "", path), "_BP"),convert)
-    #ensure no duplicate cells 
+    output_path <- paste0(path.output,files[i],"_BP") 
+    mat = load_mat(dt,output_path,convert)
+   #ensure no duplicate cells 
     colnames(mat)=paste0(colnames(mat),samples[[i]]) 
     data.list[[i]]<-mat
     metadata=append(metadata,rep(samples[[i]],length(colnames(mat))))
@@ -94,6 +96,8 @@ load_mats_to_mem=function(obj,path){
   return(obj)
 }
 offload_mats_to_disk=function(obj,path){
+  l = Layers(obj)
+  l = l[l!="scale.data"]
   for (l in Layers(obj)){
     write_matrix_dir(
       mat=as(obj[["RNA"]][l], Class = "dgCMatrix"),

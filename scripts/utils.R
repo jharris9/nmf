@@ -113,11 +113,11 @@ cluster_data = function(obj.cluster, resolution,return.model=FALSE,run_umap=FALS
   }
   obj.cluster <- FindVariableFeatures(obj.cluster)
   obj.cluster <- ScaleData(obj.cluster,features=Features(obj.cluster))
-  obj.cluster <- RunPCA(obj.cluster, seed.use = 42)
-  obj.cluster <- FindNeighbors(obj.cluster, dims = 1:30, reduction="pca")
+  obj.cluster <- RunPCA(obj.cluster, seed.use = 42, npcs=10)
+  obj.cluster <- FindNeighbors(obj.cluster, dims = 1:10, reduction="pca")
   obj.cluster <- FindClusters(obj.cluster, resolution = resolution, cluster.name = "unintegrated_clusters", random.seed=42)
   if (run_umap){
-    obj.cluster <- RunUMAP(obj.cluster, dims = 1:30, reduction = "pca", return.model=return.model, reduction.name = "umap.unintegrated",seed.use = 42)
+    obj.cluster <- RunUMAP(obj.cluster, dims = 1:10, reduction = "pca", return.model=return.model, reduction.name = "umap.unintegrated",seed.use = 42)
   }
   return(obj.cluster)
 }
@@ -137,12 +137,12 @@ project_into_reference=function(ref,query,file_prefix,figure_path,ref_data_colum
     reference.neighbors = NULL,
     reference.reduction = "pca",
     normalization.method = "LogNormalize",
-    dims = 1:30
+    dims = 1:10
   )
    
   query <- MapQuery(
     anchorset = anchor,
-    query =query,
+    query = query,
     reference = ref,
     refdata = list(celltype.l1 = ref_data_column),
     reference.reduction = "pca",
@@ -159,7 +159,7 @@ load_brain_reference=function(regenerate_subset=FALSE){
     obj.linnarsson@assays[["RNA"]]@layers[["counts"]] = open_matrix_dir(dir="output/processed_data/linnarsson/linnarsson_bp_matrix_BP") 
     cns_subtypes=c("Neurons","Vascular","Oligos","Astrocyte","Oligos,Cycling","Ependymal","Immune","Ttr")
     obj.linnarsson <- subset(obj.linnarsson, subset=Subclass %in% cns_subtypes)
-    obj.linnarsson <- FindVariableFeatures(obj.linnarsson)
+    obj.linnarsson <- cluster_data(obj.linnarsson,2,return.model=TRUE,run_umap = TRUE)
     saveRDS(
       object = obj.linnarsson,
       file = "output/processed_data/linnarsson/obj.linnarsson.subset.Rds"
@@ -171,7 +171,7 @@ load_brain_reference=function(regenerate_subset=FALSE){
 }
 
 identify_cell_types = function(obj,figure_path,project,markers){
-  obj <- cluster_data(obj,resolution=1,run_umap=FALSE)
+  obj <- cluster_data(obj,resolution=1,run_umap=TRUE,return.model=TRUE)
   if(markers=="brain"){
     markers.core = markers.brain.core
     markers.full = markers.brain
@@ -246,6 +246,7 @@ qc_and_normalize=function(obj,dataset,tissue_type){
   #  file =  paste0("output/processed_data/",dataset,"/obj.",dataset,".Rds")
   #)
   obj <- qc_subset(obj,paste0("output/figures/",dataset,"/"))
+  return(obj)
   #obj <- FindVariableFeatures(obj)
   obj <- identify_cell_types(obj,paste0("output/figures/",dataset,"/"),dataset,tissue_type)
   #obj[["condition"]]=get_condition(obj$orig.ident)
@@ -257,7 +258,7 @@ qc_and_normalize=function(obj,dataset,tissue_type){
   #  calculate_normalizations(path=paste0("output/processed_data/",dataset,"/"))
   saveRDS(
     object = obj,
-    file =  paste0("output/processed_data/",dataset,"/obj.",dataset,".Rds")
+    file =  paste0("/processed_data/",dataset,"/obj.",dataset,".Rds")
   )
 }
 

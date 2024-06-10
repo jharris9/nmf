@@ -16,7 +16,7 @@ calculate_cell_qc = function(obj, dataset, resolution){
   path = paste0("output/figures/",dataset,"/")
   obj = calculate_qc_data(obj)
   plot_qc(obj,path,dataset)
-  obj = cluster_data(obj,resolution,run_umap=TRUE)
+  obj = cluster_data(obj,resolution,run_umap=TRUE,return.model=TRUE)
   plot_cluster_qc(obj,path,dataset)
   return(obj)
 }

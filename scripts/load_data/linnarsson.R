@@ -12,14 +12,14 @@ figure_path <- "output/figures/linnarsson/"
 
 remove_duplicate_rows = function(df){
   dups = df[row.names(df) %in% duplicated(row.names(df)),]
-  dups = rowsum(dups, row.names(dups))
+  dups = rowsum(dups, as.factor(rownames(dups)))
   df = df[!duplicated(row.names(df)),]
   df = rbind(df,dups)
   return(df)
 }
 
 load_linnarsonn = function(){
-  loom_linnarsson <- Connect(filename = "raw_data/linnarsson/l5_all.agg.loom", mode="r+")
+  loom_linnarsson <- connect(filename = "/raw_data/linnarsson/l5_all.loom", mode="r+")
   #rm(mat_linnarsson)
   mat_linnarsson = loom_linnarsson[["matrix"]][,]
   #mat_linnarsson = convert_matrix_type(mat_linnarsson,type="uint32_t")
@@ -46,7 +46,7 @@ load_linnarsonn = function(){
   rownames(metadata) = cell.names
   obj.linnarsson = open_matrix_dir(dir="output/processed_data/linnarsson/linnarsson_bp_matrix_BP")
   obj.linnarsson = CreateSeuratObject(counts = obj.linnarsson, meta.data = metadata)
-  obj.linnarsson = calculate_cell_qc(obj.linnarsson,dataset="linnarsson",figure_path,resolution=2)
+  obj.linnarsson = calculate_cell_qc(obj.linnarsson,dataset="linnarsson",resolution=2)
   obj.linnarsson = apply_qc_label(obj.linnarsson,min_genes=400,mit_cutoff=25,max_count=40000)
   obj.linnarsson = JoinLayers(obj.linnarsson)
   saveRDS(
