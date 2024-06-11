@@ -33,18 +33,19 @@ load_linnarsonn = function(){
   mat_linnarsson=t(mat_linnarsson)
   mat_linnarsson=remove_duplicate_rows(mat_linnarsson)
   row.names(mat_linnarsson)[duplicated(row.names(mat_linnarsson))]
-  write_matrix_dir(
-    mat = mat_linnarsson,
-    dir = "output/processed_data/linnarsson/linnarsson_bp_matrix_BP",
-    overwrite = TRUE
-  )
+  #write_matrix_dir(
+  #  mat = mat_linnarsson,
+  #  dir = "output/processed_data/linnarsson/linnarsson_bp_matrix_BP",
+  #  overwrite = TRUE
+  #)
   metadata.list = names(loom_linnarsson[["col_attrs"]])
   metadata = data.frame(matrix(ncol=0,nrow=length(cell.names)))
   for (i in 1:length(metadata.list)){
     metadata[metadata.list[i]] <- loom_linnarsson[[paste0("col_attrs/",metadata.list[i])]][]
   }
   rownames(metadata) = cell.names
-  obj.linnarsson = open_matrix_dir(dir="output/processed_data/linnarsson/linnarsson_bp_matrix_BP")
+  #obj.linnarsson = open_matrix_dir(dir="output/processed_data/linnarsson/linnarsson_bp_matrix_BP")
+  obj.linnarsson = mat_linnarsson
   obj.linnarsson = CreateSeuratObject(counts = obj.linnarsson, meta.data = metadata)
   obj.linnarsson = calculate_cell_qc(obj.linnarsson,dataset="linnarsson",resolution=2)
   obj.linnarsson = apply_qc_label(obj.linnarsson,min_genes=400,mit_cutoff=25,max_count=40000)
@@ -60,7 +61,7 @@ load_linnarsonn = function(){
   p1 = p1+ guides(col = guide_legend(ncol=5))
   mapply(ggsave, file=paste0("linnarsson_",c("ClusterName","Subclass"),".jpg"),path=figure_path,
          device="jpeg",dpi="retina", units="in",height=20,width=30, plot=p1)
-  
+  return(obj.linnarsson)
 }
 
-load_linnarsonn() 
+obj.linnarsson=load_linnarsonn() 

@@ -24,16 +24,16 @@ load_mat = function(dt,path,convert){
   }
   mat = Matrix(as.matrix(dt),sparse=TRUE)
   rows = rownames(dt)
-  mat@x <- as.integer(mat@x)
-  mat = convert_matrix_type(mat,type="uint32_t")
-  mat = mat@matrix@mat
+  #mat@x <- as.integer(mat@x)
+  #mat = convert_matrix_type(mat,type="uint32_t")
+  #mat = mat@matrix@mat
   rownames(mat)=rows
-  write_matrix_dir(
-    mat = mat,
-    dir = path,
-    overwrite = TRUE
-  )
-  mat <- open_matrix_dir(dir=path)
+  #write_matrix_dir(
+  #  mat = mat,
+  #  dir = path,
+  #  overwrite = TRUE
+  #)
+  #mat <- open_matrix_dir(dir=path)
   return(mat)
 }
 load_data = function(path.input,path.output,files,samples,convert){

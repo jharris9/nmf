@@ -1,4 +1,5 @@
 source("scripts/utils.R")
+source("scripts/utils/utils_data_loading.R")
 dataset = "habib_2020"
 figure_path = paste0("output/processed_data/figures/",dataset)
 get_condition = function(l){
@@ -8,9 +9,10 @@ get_condition = function(l){
   return(l)
 } 
 load_habib = function(){
-  habib_path = "raw_data/habib_2020/GSE143758_Admouse_Hippocampus_7m_AllNuclei_UMIcounts.txt"
+  habib_path = "/raw_data/habib_2020/GSE143758_Admouse_Hippocampus_7m_AllNuclei_UMIcounts.txt"
   habib_dt = load_dt(habib_path)
   habib_sample=unique(substr(colnames(habib_dt),1,nchar(colnames(habib_dt))-17))
+  habib_sample = habib_sample[-1]
   habib_list <- c()
   for (i in 1:length(habib_sample)) {
     df_sub = habib_dt %>% dplyr::select(starts_with(habib_sample[i]))
