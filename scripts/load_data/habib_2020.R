@@ -9,7 +9,7 @@ get_condition = function(l){
   return(l)
 } 
 load_habib = function(){
-  habib_path = "/raw_data/habib_2020/GSE143758_Admouse_Hippocampus_7m_AllNuclei_UMIcounts.txt"
+  habib_path = "raw_data/habib_2020/GSE143758_Admouse_Hippocampus_7m_AllNuclei_UMIcounts.txt"
   habib_dt = load_dt(habib_path)
   habib_sample=unique(substr(colnames(habib_dt),1,nchar(colnames(habib_dt))-17))
   habib_sample = habib_sample[-1]
@@ -27,7 +27,7 @@ load_habib = function(){
   return(obj)
 }
 obj.habib = load_habib()
-qc_and_normalize(obj.habib,dataset,"brain")
+obj.habib = qc_and_normalize(obj.habib,dataset,"brain")
 
 obj.habib = readRDS(file = "output/processed_data/habib_2020/obj.habib_2020.Rds")
 

@@ -113,11 +113,11 @@ cluster_data = function(obj.cluster, resolution,return.model=FALSE,run_umap=FALS
   }
   obj.cluster <- FindVariableFeatures(obj.cluster)
   obj.cluster <- ScaleData(obj.cluster,features=Features(obj.cluster))
-  obj.cluster <- RunPCA(obj.cluster, seed.use = 42, npcs=10)
-  obj.cluster <- FindNeighbors(obj.cluster, dims = 1:10)
+  obj.cluster <- RunPCA(obj.cluster, seed.use = 42, npcs=25)
+  obj.cluster <- FindNeighbors(obj.cluster, dims = 1:25)
   obj.cluster <- FindClusters(obj.cluster, resolution = resolution, cluster.name = "unintegrated_clusters", random.seed=42)
   if (run_umap){
-    obj.cluster <- RunUMAP(obj.cluster, dims = 1:10, reduction = "pca", return.model=return.model, reduction.name = "umap.unintegrated",seed.use = 42)
+    obj.cluster <- RunUMAP(obj.cluster, dims = 1:25, reduction = "pca", return.model=return.model, reduction.name = "umap.unintegrated",seed.use = 42)
   }
   return(obj.cluster)
 }

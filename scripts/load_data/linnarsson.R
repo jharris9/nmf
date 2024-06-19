@@ -19,7 +19,7 @@ remove_duplicate_rows = function(df){
 }
 
 load_linnarsonn = function(){
-  loom_linnarsson <- connect(filename = "/raw_data/linnarsson/l5_all.loom", mode="r+")
+  loom_linnarsson <- connect(filename = "raw_data/linnarsson/l5_all.loom", mode="r+")
   #rm(mat_linnarsson)
   mat_linnarsson = loom_linnarsson[["matrix"]][,]
   #mat_linnarsson = convert_matrix_type(mat_linnarsson,type="uint32_t")

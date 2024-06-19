@@ -7,11 +7,11 @@ convert_ensemble_to_gene_name = function(dt,ensb){
   #dt = setDT(df)
   dt = merge(x=dt,y=ensb,by.x="ensemble",by.y="Gene.stable.ID")#merge
   dt = dt[,ensemble:=NULL] #drop ensemble
-  dt = dt[,V1:=NULL] #drop ensemble
+  #dt = dt[,V1:=NULL] #drop ensemble
   dt = dt[,lapply(.SD, sum), by="Gene.name"] #sum same gene names
   dt = na.omit(dt,cols="Gene.name") #Filter na
   #dt = dt["Gene.name"!=""]
-  #df = setDF(dt) 
+  #df = setDF(dt) s
   dt = dt %>% na.omit() #%>% filter()
   dt = dt[dt$`Gene.name`!=""]
   row.names(dt)=dt[["Gene.name"]]

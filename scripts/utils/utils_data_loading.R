@@ -8,7 +8,7 @@ load_dt  = function(path){
   #dt = dt[,lapply(.SD, sum), by="Gene name"]
   rows = dt[[1]]
   rownames(dt)=rows
-  #dt[,1:=NULL]
+  dt[,1:=NULL]
   return(dt)
 }
 
@@ -16,7 +16,7 @@ load_dt  = function(path){
 load_mat = function(dt,path,convert){
   if (convert=="ensemble"){
     #mat <- Azimuth:::ConvertEnsembleToSymbol(mat = mat, species = "mouse")
-    ensb=read.csv("/raw_data/ensembl_gene_name.txt",sep="\t")
+    ensb=read.csv("raw_data/ensembl_gene_name.txt",sep="\t")
     dt = convert_ensemble_to_gene_name(dt,ensb)
   }else if(convert=="human"){
     #rownames(dt) = unlist(lapply(rownames(dt), function(x) convert_human_to_mouse(x)))
