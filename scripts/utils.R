@@ -113,9 +113,11 @@ cluster_data = function(obj.cluster, resolution,return.model=FALSE,run_umap=FALS
   }
   obj.cluster <- FindVariableFeatures(obj.cluster)
   obj.cluster <- ScaleData(obj.cluster,features=Features(obj.cluster))
-  obj.cluster <- RunPCA(obj.cluster, seed.use = 42, npcs=25)
-  obj.cluster <- FindNeighbors(obj.cluster, dims = 1:25)
-  obj.cluster <- FindClusters(obj.cluster, resolution = resolution, cluster.name = "unintegrated_clusters", random.seed=42)
+  obj.cluster <- SCTransform(obj.cluster)
+  gc()
+  obj.cluster <- RunPCA(obj.cluster, assay="SCT", seed.use = 42, npcs=25)
+  obj.cluster <- FindNeighbors(obj.cluster, assay="SCT", dims = 1:25)
+  obj.cluster <- FindClusters(obj.cluster, assay="SCT", resolution = resolution, cluster.name = "unintegrated_clusters", random.seed=42)
   if (run_umap){
     obj.cluster <- RunUMAP(obj.cluster, dims = 1:25, reduction = "pca", return.model=return.model, reduction.name = "umap.unintegrated",seed.use = 42)
   }
@@ -124,8 +126,8 @@ cluster_data = function(obj.cluster, resolution,return.model=FALSE,run_umap=FALS
 
 project_into_reference=function(ref,query,file_prefix,figure_path,ref_data_column){
   #MERGE LAYERS
-  query = JoinLayers(query)
-  ref = JoinLayers(ref)
+  #query = JoinLayers(query)
+  #ref = JoinLayers(ref)
   common_features <- intersect(Features(ref), Features(query))
   ref = subset(x=ref, features=common_features)
   query = subset(x=query, features=common_features)
@@ -137,18 +139,21 @@ project_into_reference=function(ref,query,file_prefix,figure_path,ref_data_colum
   anchor <- FindTransferAnchors(
     reference = ref,
     query = query,
-    features=common_features,
+    reference.assay = "SCT",
+    query.assay = "SCT",
+    #features=common_features,
     #reference.neighbors = NULL,
+    reduction = "pcaproject",
     reference.reduction = "pca",
-    #normalization.method = "LogNormalize",
-    dims = 1:10
+    normalization.method = "SCT",#"LogNormalize",
+    dims = 1:25
   )
    
   query <- MapQuery(
     anchorset = anchor,
     reference = ref,
     query = query,
-    refdata = list(celltype.l1 = ref_data_column),
+    refdata = list(celltype.l1 = "Subclass"),#ref_data_column),
     reference.reduction = "pca",
     reduction.model = "umap.unintegrated"
   )
@@ -175,7 +180,7 @@ load_brain_reference=function(regenerate_subset=FALSE){
 }
 
 identify_cell_types = function(obj,figure_path,project,markers){
-  obj <- cluster_data(obj,resolution=1,run_umap=TRUE,return.model=TRUE)
+  #obj <- cluster_data(obj,resolution=1,run_umap=TRUE,return.model=TRUE)
   if(markers=="brain"){
     markers.core = markers.brain.core
     markers.full = markers.brain
@@ -250,7 +255,7 @@ qc_and_normalize=function(obj,dataset,tissue_type){
   #  file =  paste0("output/processed_data/",dataset,"/obj.",dataset,".Rds")
   #)
   obj <- qc_subset(obj,paste0("output/figures/",dataset,"/"))
-  #return(obj)
+  return(obj)
   #obj <- FindVariableFeatures(obj)
   obj <- identify_cell_types(obj,paste0("output/figures/",dataset,"/"),dataset,tissue_type)
   #obj[["condition"]]=get_condition(obj$orig.ident)

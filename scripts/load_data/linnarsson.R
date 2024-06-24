@@ -52,9 +52,9 @@ load_linnarsonn = function(){
   obj.linnarsson = JoinLayers(obj.linnarsson)
   saveRDS(
     object = obj.linnarsson,
-    file = "output/processed_data/linnarsson/obj.linnarsson.Rds",
+    file = "output/processed_data/linnarsson/obj.linnarsson.subset.Rds",
   )
-  obj.linnarsson <- readRDS(file = "output/processed_data/linnarsson/obj.linnarsson.Rds")
+  obj.linnarsson <- readRDS(file = "output/processed_data/linnarsson/obj.linnarsson.subset.Rds")
   obj.linnarsson@assays[["RNA"]]@layers[["counts"]] = open_matrix_dir(dir="output/processed_data/linnarsson/linnarsson_bp_matrix_BP") 
   p1 = DimPlot(obj.linnarsson, group.by = c("ClusterName","Subclass"), reduction = "umap.unintegrated", combine=T, raster=F, label=T, label.size = 8, repel=T)  
   p1=unlist(p1)
