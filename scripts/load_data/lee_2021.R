@@ -70,6 +70,6 @@ obj <- FindNeighbors(obj, assay="SCT", dims = 2:25)
 obj <- FindClusters(obj, assay="SCT", resolution = 1, cluster.name = "unintegrated_clusters", random.seed=42)
 obj <- RunUMAP(obj, dims = 2:25, reduction = "pca", return.model=T, reduction.name = "umap.unintegrated",seed.use = 42)
 DimPlot(obj,reduction="pca",group.by = "interpretation")
-#obj.lee = readRDS(file = "output/processed_data/lee_2021/obj.lee_2021.Rds")
+obj.lee = readRDS(file = "output/processed_data/lee_2021/obj.lee_2021.Rds")
 
 
